@@ -16,6 +16,8 @@ const generateRoute = (path: string[]) => {
     const shortcut = path[0].toLowerCase();
     return shortcut.startsWith("home") || shortcut.startsWith("index")
       ? ""
+      : shortcut.startsWith("_") // Note: handle dynamic routes
+      ? shortcut.replace("_", ":")
       : shortcut;
   }
 
@@ -24,6 +26,8 @@ const generateRoute = (path: string[]) => {
   // Note: remove last element in array if it is index
   if (lastElement.toLowerCase().startsWith("index")) {
     path.pop();
+  } else if (lastElement.startsWith("_")) {
+    path[path.length - 1] = lastElement.replace("_", ":");
   }
 
   return path.map((p) => p.toLowerCase()).join("/");
