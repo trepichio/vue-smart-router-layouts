@@ -1,4 +1,5 @@
 import { RouteRecordRaw } from "vue-router";
+import { ChildrenByPath } from "@/common/types";
 
 const importAll = (r: __WebpackModuleApi.RequireContext): string[][] =>
   r.keys().map((key) => key.slice(2).replace(".vue", "").split("/"));
@@ -33,19 +34,72 @@ const generateRoute = (path: string[]) => {
   return path.map((p) => p.toLowerCase()).join("/");
 };
 
-export default pages.map(
-  async (path: string[]): Promise<RouteRecordRaw> => {
-    const { default: component } = await import(`../views/${path.join("/")}`);
-    const { name }: { name: string } = component;
+const childrenFilter = (p: string) => ~p.indexOf("^");
 
-    const route = `/${generateRoute([...path])}`;
+const childrenByPath: ChildrenByPath = pages
+  // Note: filter pages by children routes
+  .filter((path) => path.some(childrenFilter))
+  .map((path) => {
+    // Note: copy path and remove special char ^
+    const copy = [...path];
+    copy[copy.length - 1] = copy[copy.length - 1].slice(1);
+    // Note: generate key to identify parent
+    const key = `/${generateRoute(copy.slice(0, copy.length - 1))}`;
     return {
-      path: route,
-      name,
-      component,
-      meta: {
-        layout: `AppLayout${name}`,
-      },
+      path,
+      route: `/${generateRoute(copy)}`,
+      key: key as unknown,
     };
-  }
-);
+  })
+  .reduce((acc, current) => {
+    // Note: generate list of nested routes where key is the parent path
+    const key = current.key as string;
+    delete current.key;
+    if (acc[key]) {
+      acc[key].push(current);
+    } else {
+      acc[key] = [current];
+    }
+    return acc;
+  }, {} as ChildrenByPath);
+
+export default pages
+  // Note: remove nested routes from pages
+  .filter((path) => !path.some(childrenFilter))
+  .map(
+    async (path: string[]): Promise<RouteRecordRaw> => {
+      const { default: component } = await import(`../views/${path.join("/")}`);
+      const { name }: { name: string } = component;
+      const route = `/${generateRoute([...path])}`;
+
+      let children: RouteRecordRaw[] = [];
+
+      if (childrenByPath[route]) {
+        const promises = childrenByPath[route].map(async ({ path, route }) => {
+          const { default: childComponent } = await import(
+            `../views/${path.join("/")}`
+          );
+          const { name: childName } = childComponent;
+          return {
+            path: route,
+            name: childName,
+            component: childComponent,
+            meta: {
+              layout: `AppLayout${childName}`,
+            },
+          };
+        });
+        children = await Promise.all(promises);
+      }
+
+      return {
+        path: route,
+        name,
+        component,
+        meta: {
+          layout: `AppLayout${name}`,
+        },
+        children,
+      };
+    }
+  );
