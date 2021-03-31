@@ -5,14 +5,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, markRaw } from "vue";
 import AppLayoutDefault from "./AppLayoutDefault.vue";
 
 export default defineComponent({
   name: "AppLayout",
 
   data: () => ({
-    layout: AppLayoutDefault,
+    layout: markRaw(AppLayoutDefault),
   }),
   watch: {
     $route: {
@@ -20,9 +20,9 @@ export default defineComponent({
       async handler(route) {
         try {
           const component = await import(`@/layouts/${route.meta.layout}.vue`);
-          this.layout = component?.default || AppLayoutDefault;
+          this.layout = markRaw(component?.default || AppLayoutDefault);
         } catch (e) {
-          this.layout = AppLayoutDefault;
+          this.layout = markRaw(AppLayoutDefault);
         }
       },
     },
