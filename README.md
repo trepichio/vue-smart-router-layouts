@@ -33,6 +33,8 @@ It's worth to check it out, for sure! 🚀
 -  /posts/1 (or any other id)
 -  /posts/edit/1 (or any other id)
 ```
+
+*Restriction Note: Nested routes can go only one level deep.*
 ## 🏁 Getting Started <a name = "getting_started"></a>
 
 ### Project setup
