@@ -1,44 +1,33 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
+import {
+  createRouter,
+  createWebHistory,
+  NavigationGuardNext,
+  RouteLocationNormalized,
+} from "vue-router";
+import routes from "./routes";
 
-const routes: Array<RouteRecordRaw> = [
-  {
-    path: "/",
-    name: "Home",
-    component: () => import("@/views/Home.vue"),
-    meta: {
-      layout: "AppLayoutHome",
-    },
-  },
-  {
-    path: "/about",
-    name: "About",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () =>
-      import(/* webpackChunkName: "about" */ "@/views/About.vue"),
-    meta: {
-      layout: "AppLayoutAbout",
-    },
-  },
-  {
-    path: "/contacts",
-    name: "Contacts",
-    component: () => import("@/views/Contacts.vue"),
-    meta: {
-      layout: "AppLayoutContacts",
-    },
-  },
-  {
-    path: "/test",
-    name: "Test",
-    component: () => import("@/views/Home.vue"),
-  },
-];
+export default Promise.all(routes).then((routes) => {
+  const router = createRouter({
+    history: createWebHistory(process.env.BASE_URL),
+    routes,
+  });
 
-const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
-  routes,
+  router.beforeEach((to, from, next) => {
+    if (!to.meta.middlewares) {
+      return next();
+    }
+    const middlewares = to.meta.middlewares as {
+      [key: string]: <T extends RouteLocationNormalized>(
+        t: T,
+        f: T,
+        n: NavigationGuardNext
+      ) => void;
+    };
+    Object.keys(middlewares).forEach((middleware: string) => {
+      middlewares[middleware](to, from, next);
+    });
+    return next();
+  });
+
+  return router;
 });
-
-export default router;

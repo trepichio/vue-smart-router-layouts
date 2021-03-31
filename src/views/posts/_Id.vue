@@ -1,15 +1,14 @@
 <template>
   <div>
-    <h1>This a contacts page</h1>
+    <h1>This is a page of the post with id {{ $route.params.id }}</h1>
   </div>
 </template>
 
-<script lang="ts">
+<script>
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: "Contacts",
-  layout: "AppLayoutAbout",
+  name: "PostDetails",
 
   data() {
     return {};

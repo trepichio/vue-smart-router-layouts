@@ -1,15 +1,14 @@
 <template>
   <div>
-    <h1>This a contacts page</h1>
+    <h1>This is a post creation page</h1>
   </div>
 </template>
 
-<script lang="ts">
+<script>
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: "Contacts",
-  layout: "AppLayoutAbout",
+  name: "PostCreate",
 
   data() {
     return {};

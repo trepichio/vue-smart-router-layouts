@@ -1,9 +1,10 @@
 <template>
-  <div id="nav">
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link> |
-    <router-link to="/contacts">Contacts</router-link> |
-    <router-link to="/users">Users</router-link>
+  <div>
+    <h1>This is a list of users page</h1>
+    <div id="nav">
+      <router-link to="/users/profile">View User Profile</router-link>
+    </div>
+    <router-view />
   </div>
 </template>
 
@@ -11,8 +12,8 @@
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: "AppLayoutLinks",
-
+  name: "Users",
+  layout: "AppLayoutUsers",
   data() {
     return {};
   },
