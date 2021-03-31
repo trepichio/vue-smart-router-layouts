@@ -1,5 +1,6 @@
-import { RouteRecordRaw } from "vue-router";
 import { ChildrenByPath } from "@/common/types";
+import { ComponentOptions } from "@vue/runtime-core";
+import { RouteRecordRaw } from "vue-router";
 
 const importAll = (r: __WebpackModuleApi.RequireContext): string[][] =>
   r.keys().map((key) => key.slice(2).replace(".vue", "").split("/"));
@@ -63,13 +64,15 @@ const childrenByPath: ChildrenByPath = pages
     return acc;
   }, {} as ChildrenByPath);
 
+const defaultLayout = "AppDefaultLayout";
+
 export default pages
   // Note: remove nested routes from pages
   .filter((path) => !path.some(childrenFilter))
   .map(
     async (path: string[]): Promise<RouteRecordRaw> => {
       const { default: component } = await import(`../views/${path.join("/")}`);
-      const { name }: { name: string } = component;
+      const { name, layout, middlewares }: ComponentOptions = component;
       const route = `/${generateRoute([...path])}`;
 
       let children: RouteRecordRaw[] = [];
@@ -79,13 +82,18 @@ export default pages
           const { default: childComponent } = await import(
             `../views/${path.join("/")}`
           );
-          const { name: childName } = childComponent;
+          const {
+            name: childName,
+            layout: childLayout,
+            middlewares: childMiddleware,
+          } = childComponent;
           return {
             path: route,
             name: childName,
             component: childComponent,
             meta: {
-              layout: `AppLayout${childName}`,
+              layout: childLayout || layout || defaultLayout,
+              middlewares: childMiddleware || {},
             },
           };
         });
@@ -97,7 +105,8 @@ export default pages
         name,
         component,
         meta: {
-          layout: `AppLayout${name}`,
+          layout: layout || defaultLayout,
+          middlewares: middlewares || {},
         },
         children,
       };
